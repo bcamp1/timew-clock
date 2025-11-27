@@ -586,15 +586,19 @@ def main():
 
     elif command == 'day':
         output = run_timew_command(['day'] + args)
-        print_result(convert_output_to_12h(output))
+        print_result(output)
 
     elif command == 'week':
         output = run_timew_command(['week'] + args)
-        print_result(convert_output_to_12h(output))
+        print_result(output)
 
     elif command == 'month':
         output = run_timew_command(['month'] + args)
-        print_result(convert_output_to_12h(output))
+        print_result(output)
+
+    elif command == 'year':
+        output = run_timew_command(['year'] + args)
+        print_result(output)
 
     elif command == 'summary':
         output = run_timew_command(['summary'] + args)
