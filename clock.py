@@ -443,8 +443,12 @@ def align_summary_columns(text: str, show_annotations: bool = False) -> str:
                 time = match.group(5)
                 total = match.group(6) or ''
 
-                # Calculate indent to align with data columns (account for vertical borders)
-                indent = ' ' * (max_widths['wk'] + 3 + max_widths['date'] + 3)
+                # Calculate indent to align with data columns with proper vertical borders
+                # Format: [Wk spaces] │ [Date spaces] │
+                indent = (
+                    f"{' ' * max_widths['wk']} │ "
+                    f"{' ' * max_widths['date']} │ "
+                )
                 formatted = (
                     f"{indent}"
                     f"{tags:<{max_widths['tags']}} │ "
