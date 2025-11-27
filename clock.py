@@ -363,9 +363,41 @@ def align_summary_columns(text: str) -> str:
     # Second pass: format lines with proper alignment
     result_lines = []
     for line in lines:
-        # Keep header and separator lines as-is
-        if not line.strip() or line.startswith('---') or 'Tags' in line:
+        # Handle empty lines
+        if not line.strip():
             result_lines.append(line)
+            continue
+
+        # Handle header line (contains "Tags")
+        if 'Tags' in line:
+            # Rebuild header with proper column widths
+            header = (
+                f"{'Wk':<{max_widths['wk']}}  "
+                f"{'Date':<{max_widths['date']}}  "
+                f"{'Tags':<{max_widths['tags']}}  "
+                f"{'Start':>{max_widths['start']}}  "
+                f"{'End':>{max_widths['end']}}  "
+                f"{'Time':>{max_widths['time']}}"
+            )
+            if max_widths['total'] > 0:
+                header += f"  {'Total':>{max_widths['total']}}"
+            result_lines.append(header)
+            continue
+
+        # Handle separator line (dashes)
+        if line.startswith('---'):
+            # Rebuild separator with proper column widths
+            separator = (
+                f"{'-' * max_widths['wk']}  "
+                f"{'-' * max_widths['date']}  "
+                f"{'-' * max_widths['tags']}  "
+                f"{'-' * max_widths['start']}  "
+                f"{'-' * max_widths['end']}  "
+                f"{'-' * max_widths['time']}"
+            )
+            if max_widths['total'] > 0:
+                separator += f"  {'-' * max_widths['total']}"
+            result_lines.append(separator)
             continue
 
         # Match and format primary rows
