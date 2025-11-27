@@ -142,6 +142,15 @@ def convert_output_to_12h(output: str) -> str:
     return output
 
 
+def remove_seconds_from_times(text: str) -> str:
+    """Remove seconds from time displays (HH:MM:SS am/pm -> HH:MM am/pm)."""
+    # Match times in format HH:MM:SS AM/PM and replace with HH:MM AM/PM
+    text = re.sub(r'\b(\d{1,2}):(\d{2}):\d{2}\s+([APap][Mm])\b',
+                  r'\1:\2 \3',
+                  text)
+    return text
+
+
 def replace_timew_with_clock(text: str) -> str:
     """Replace 'timew' command references with 'clock' in help text."""
     # Replace "timew <command>" with "clock <command>" at the start of lines
@@ -163,6 +172,8 @@ def main():
         # No command, show summary instead of help (more useful than timew's default)
         output = run_timew_command(['summary'])
         output = convert_output_to_12h(output)
+        # Remove seconds for cleaner summary display
+        output = remove_seconds_from_times(output)
         print_result(output)
 
     command = sys.argv[1]
@@ -191,7 +202,10 @@ def main():
 
     elif command == 'summary':
         output = run_timew_command(['summary'] + args)
-        print_result(convert_output_to_12h(output))
+        output = convert_output_to_12h(output)
+        # Remove seconds for cleaner summary display
+        output = remove_seconds_from_times(output)
+        print_result(output)
 
     elif command == 'begin':
         # Parse: clock begin <tags...> "<annotation>"
