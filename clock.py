@@ -391,18 +391,18 @@ def align_summary_columns(text: str, show_annotations: bool = False) -> str:
             continue
 
         # Handle separator line (dashes)
-        if line.startswith('---'):
-            # Rebuild separator with proper column widths
+        if line.startswith('---') or line.startswith('═══'):
+            # Rebuild separator with proper column widths using fancy double border character
             separator = (
-                f"{'-' * max_widths['wk']}  "
-                f"{'-' * max_widths['date']}  "
-                f"{'-' * max_widths['tags']}  "
-                f"{'-' * max_widths['start']}  "
-                f"{'-' * max_widths['end']}  "
-                f"{'-' * max_widths['time']}"
+                f"{'═' * max_widths['wk']}  "
+                f"{'═' * max_widths['date']}  "
+                f"{'═' * max_widths['tags']}  "
+                f"{'═' * max_widths['start']}  "
+                f"{'═' * max_widths['end']}  "
+                f"{'═' * max_widths['time']}"
             )
             if max_widths['total'] > 0:
-                separator += f"  {'-' * max_widths['total']}"
+                separator += f"  {'═' * max_widths['total']}"
             result_lines.append(separator)
             continue
 
