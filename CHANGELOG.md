@@ -2,6 +2,20 @@
 
 All notable changes to Clock are documented in this file.
 
+## [1.2.0] - 2025-11-26
+
+### Added
+- **Period shortcuts for summary** - Use `:day`, `:week`, `:month`, `:year` as shorthand for `summary :day`, `summary :week`, etc.
+- Support for `clock :color` on day, week, month, year commands to preserve timewarrior's color output
+- Improved setup script with friendly installation messaging and PATH checking
+
+### Changed
+- **Simplified day/week/month/year commands** - Now return raw timewarrior output without custom formatting (keep colors intact)
+- Setup script (`s`) now provides better user feedback during installation
+
+### Fixed
+- Color output is now properly preserved for day, week, month, year reports
+
 ## [1.1.0] - 2025-11-26
 
 ### Added

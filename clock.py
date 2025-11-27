@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from typing import List
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 
 def convert_24h_to_12h(time_str: str) -> str:
