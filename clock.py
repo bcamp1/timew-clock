@@ -160,11 +160,9 @@ def print_result(result: str):
 def main():
     """Main entry point for clock command."""
     if len(sys.argv) < 2:
-        # No command, show help
-        output = run_timew_command(['help'])
-        output = replace_timew_with_clock(output)
-        # Add info about the new 'begin' command
-        output += "\n       clock begin <tags> \"<annotation>\"  (new: start timer with annotation)"
+        # No command, show summary instead of help (more useful than timew's default)
+        output = run_timew_command(['summary'])
+        output = convert_output_to_12h(output)
         print_result(output)
 
     command = sys.argv[1]
