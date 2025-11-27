@@ -142,6 +142,58 @@ def convert_output_to_12h(output: str) -> str:
     return output
 
 
+def align_summary_columns(text: str) -> str:
+    """Align summary columns using tabs for better readability."""
+    lines = text.split('\n')
+    result_lines = []
+
+    for line in lines:
+        # Skip empty lines and header/separator lines
+        if not line.strip() or line.startswith('---') or 'Tags' in line:
+            result_lines.append(line)
+            continue
+
+        # For data lines, split by multiple spaces and rejoin with tabs
+        # Pattern: Wk Date Day Tags Start End Time Total
+        # We'll use regex to identify the columns and realign them
+
+        # Match lines that start with week number
+        if re.match(r'^W\d+', line):
+            # This is a data row with week/date info
+            # Split into: Wk, Date+Day, Tags, Start, End, Time, Total
+            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            if match:
+                wk = match.group(1)
+                date_day = match.group(2)
+                tags = match.group(3).rstrip()
+                start = match.group(4)
+                end = match.group(5)
+                time = match.group(6)
+                total = match.group(7) if match.group(7) else ''
+                # Rejoin with better spacing
+                line = f"{wk}\t{date_day}\t{tags}\t{start}\t{end}\t{time}"
+                if total:
+                    line += f"\t{total}"
+        else:
+            # Continuation line (no week/date), align the tags and times
+            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            if match:
+                indent = match.group(1)
+                tags = match.group(2).rstrip()
+                start = match.group(3)
+                end = match.group(4)
+                time = match.group(5)
+                total = match.group(6) if match.group(6) else ''
+                # Rejoin with tabs, padding the empty columns for alignment
+                line = f"{indent}\t\t{tags}\t{start}\t{end}\t{time}"
+                if total:
+                    line += f"\t{total}"
+
+        result_lines.append(line)
+
+    return '\n'.join(result_lines)
+
+
 def remove_day_column(text: str) -> str:
     """Remove the Day column from summary output and merge with Date column."""
     lines = text.split('\n')
@@ -209,6 +261,8 @@ def main():
         output = format_dates_in_summary(output)
         # Remove Day column and merge with Date
         output = remove_day_column(output)
+        # Align columns using tabs
+        output = align_summary_columns(output)
         print_result(output)
 
     command = sys.argv[1]
@@ -244,6 +298,8 @@ def main():
         output = format_dates_in_summary(output)
         # Remove Day column and merge with Date
         output = remove_day_column(output)
+        # Align columns using tabs
+        output = align_summary_columns(output)
         print_result(output)
 
     elif command == 'begin':
