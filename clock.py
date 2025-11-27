@@ -655,7 +655,7 @@ def main():
 
         # Start the timer
         result = run_timew_command(['start'] + tags)
-        output = convert_output_to_12h(result)
+        output = result
 
         # Add annotation if provided
         if annotation:
