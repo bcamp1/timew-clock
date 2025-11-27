@@ -142,6 +142,15 @@ def convert_output_to_12h(output: str) -> str:
     return output
 
 
+def replace_timew_with_clock(text: str) -> str:
+    """Replace 'timew' command references with 'clock' in help text."""
+    # Replace "timew <command>" with "clock <command>" at the start of lines
+    text = re.sub(r'^       timew ', '       clock ', text, flags=re.MULTILINE)
+    # Also replace standalone "timew" at the start of usage lines
+    text = re.sub(r'^Usage: timew', 'Usage: clock', text, flags=re.MULTILINE)
+    return text
+
+
 def print_result(result: str):
     """Print result and exit cleanly."""
     print(result, end='')
@@ -153,12 +162,24 @@ def main():
     if len(sys.argv) < 2:
         # No command, show help
         output = run_timew_command(['help'])
+        output = replace_timew_with_clock(output)
+        # Add info about the new 'begin' command
+        output += "\n       clock begin <tags> \"<annotation>\"  (new: start timer with annotation)"
         print_result(output)
 
     command = sys.argv[1]
     args = sys.argv[2:]
 
-    if command == 'day':
+    if command == 'help':
+        # Show help with clock instead of timew
+        output = run_timew_command(['help'] + args)
+        output = replace_timew_with_clock(output)
+        # Add info about the new 'begin' command
+        if len(args) == 0:  # Only add to main help, not subcommand help
+            output += "\n       clock begin <tags> \"<annotation>\"  (new: start timer with annotation)"
+        print_result(output)
+
+    elif command == 'day':
         output = run_timew_command(['day'] + args)
         print_result(convert_output_to_12h(output))
 
