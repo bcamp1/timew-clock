@@ -585,19 +585,19 @@ def main():
         print_result(f"clock {__version__}\n")
 
     elif command == 'day':
-        output = run_timew_command(['day'] + args)
+        output = run_timew_command(['day', ':color'] + args)
         print_result(output)
 
     elif command == 'week':
-        output = run_timew_command(['week'] + args)
+        output = run_timew_command(['week', ':color'] + args)
         print_result(output)
 
     elif command == 'month':
-        output = run_timew_command(['month'] + args)
+        output = run_timew_command(['month', ':color'] + args)
         print_result(output)
 
     elif command == 'year':
-        output = run_timew_command(['year'] + args)
+        output = run_timew_command(['year', ':color'] + args)
         print_result(output)
 
     elif command == 'summary':
