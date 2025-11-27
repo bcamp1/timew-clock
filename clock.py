@@ -143,53 +143,97 @@ def convert_output_to_12h(output: str) -> str:
 
 
 def align_summary_columns(text: str) -> str:
-    """Align summary columns using tabs for better readability."""
+    """Right-align time columns so am/pm values line up."""
     lines = text.split('\n')
-    result_lines = []
+
+    # First pass: find max widths for all columns
+    max_widths = {'wk': 0, 'date': 0, 'tags': 0, 'start': 0, 'end': 0, 'time': 0, 'total': 0}
 
     for line in lines:
         # Skip empty lines and header/separator lines
         if not line.strip() or line.startswith('---') or 'Tags' in line:
+            continue
+
+        # Match primary rows (with week/date)
+        if re.match(r'^W\d+', line):
+            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            if match:
+                max_widths['wk'] = max(max_widths['wk'], len(match.group(1)))
+                max_widths['date'] = max(max_widths['date'], len(match.group(2)))
+                max_widths['tags'] = max(max_widths['tags'], len(match.group(3).rstrip()))
+                max_widths['start'] = max(max_widths['start'], len(match.group(4)))
+                max_widths['end'] = max(max_widths['end'], len(match.group(5)))
+                max_widths['time'] = max(max_widths['time'], len(match.group(6)))
+                if match.group(7):
+                    max_widths['total'] = max(max_widths['total'], len(match.group(7)))
+        else:
+            # Match continuation rows (no week/date)
+            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            if match:
+                max_widths['tags'] = max(max_widths['tags'], len(match.group(2).rstrip()))
+                max_widths['start'] = max(max_widths['start'], len(match.group(3)))
+                max_widths['end'] = max(max_widths['end'], len(match.group(4)))
+                max_widths['time'] = max(max_widths['time'], len(match.group(5)))
+                if match.group(6):
+                    max_widths['total'] = max(max_widths['total'], len(match.group(6)))
+
+    # Second pass: format lines with proper alignment
+    result_lines = []
+    for line in lines:
+        # Keep header and separator lines as-is
+        if not line.strip() or line.startswith('---') or 'Tags' in line:
             result_lines.append(line)
             continue
 
-        # For data lines, split by multiple spaces and rejoin with tabs
-        # Pattern: Wk Date Day Tags Start End Time Total
-        # We'll use regex to identify the columns and realign them
-
-        # Match lines that start with week number
+        # Match and format primary rows
         if re.match(r'^W\d+', line):
-            # This is a data row with week/date info
-            # Split into: Wk, Date+Day, Tags, Start, End, Time, Total
             match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
             if match:
                 wk = match.group(1)
-                date_day = match.group(2)
+                date = match.group(2)
                 tags = match.group(3).rstrip()
                 start = match.group(4)
                 end = match.group(5)
                 time = match.group(6)
-                total = match.group(7) if match.group(7) else ''
-                # Rejoin with better spacing
-                line = f"{wk}\t{date_day}\t{tags}\t{start}\t{end}\t{time}"
+                total = match.group(7) or ''
+
+                formatted = (
+                    f"{wk:<{max_widths['wk']}}  "
+                    f"{date:<{max_widths['date']}}  "
+                    f"{tags:<{max_widths['tags']}}  "
+                    f"{start:>{max_widths['start']}}  "
+                    f"{end:>{max_widths['end']}}  "
+                    f"{time:>{max_widths['time']}}"
+                )
                 if total:
-                    line += f"\t{total}"
+                    formatted += f"  {total:>{max_widths['total']}}"
+                result_lines.append(formatted)
+            else:
+                result_lines.append(line)
         else:
-            # Continuation line (no week/date), align the tags and times
+            # Match and format continuation rows
             match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
             if match:
-                indent = match.group(1)
                 tags = match.group(2).rstrip()
                 start = match.group(3)
                 end = match.group(4)
                 time = match.group(5)
-                total = match.group(6) if match.group(6) else ''
-                # Rejoin with tabs, padding the empty columns for alignment
-                line = f"{indent}\t\t{tags}\t{start}\t{end}\t{time}"
-                if total:
-                    line += f"\t{total}"
+                total = match.group(6) or ''
 
-        result_lines.append(line)
+                # Calculate indent to align with data columns
+                indent = ' ' * (max_widths['wk'] + 2 + max_widths['date'] + 2)
+                formatted = (
+                    f"{indent}"
+                    f"{tags:<{max_widths['tags']}}  "
+                    f"{start:>{max_widths['start']}}  "
+                    f"{end:>{max_widths['end']}}  "
+                    f"{time:>{max_widths['time']}}"
+                )
+                if total:
+                    formatted += f"  {total:>{max_widths['total']}}"
+                result_lines.append(formatted)
+            else:
+                result_lines.append(line)
 
     return '\n'.join(result_lines)
 
