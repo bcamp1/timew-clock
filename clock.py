@@ -385,10 +385,9 @@ def align_summary_columns(text: str, show_annotations: bool = False) -> str:
                 f"{tags_label:<{max_widths['tags']}} │ "
                 f"{'Start':>{max_widths['start']}} │ "
                 f"{'End':>{max_widths['end']}} │ "
-                f"{'Time':>{max_widths['time']}}"
+                f"{'Time':>{max_widths['time']}} │ "
+                f"{'Total':>{max_widths['total']}}"
             )
-            if max_widths['total'] > 0:
-                header += f" │ {'Total':>{max_widths['total']}}"
             result_lines.append(header)
             continue
 
@@ -401,12 +400,9 @@ def align_summary_columns(text: str, show_annotations: bool = False) -> str:
                 f"{'─' * max_widths['tags']}─┼─"
                 f"{'─' * max_widths['start']}─┼─"
                 f"{'─' * max_widths['end']}─┼─"
-                f"{'─' * max_widths['time']}"
+                f"{'─' * max_widths['time']}─┼─"
+                f"{'─' * max_widths['total']}"
             )
-            if max_widths['total'] > 0:
-                separator += f"─┼─{'─' * max_widths['total']}"
-            else:
-                separator += '─'
             result_lines.append(separator)
             continue
 
