@@ -147,6 +147,10 @@ def convert_summary_to_12h(output: str) -> str:
 
     Only converts the Start and End columns, preserving Time and Total columns as-is
     since they are durations, not times of day.
+
+    Handles both completed and ongoing tasks:
+    - Completed: HH:MM:SS HH:MM:SS (has end time)
+    - Ongoing: HH:MM:SS - (has dash instead of end time)
     """
     lines = output.split('\n')
     result_lines = []
@@ -159,25 +163,39 @@ def convert_summary_to_12h(output: str) -> str:
 
         # For continuation rows (indented, without week), look for start/end times
         if not re.match(r'^W\d+', line) and line.strip():
-            # Continuation rows might still have start/end times
-            # Pattern: spaces... tags... H:MM:SS or HH:MM:SS followed by same
-            # Try to match and convert them
-            match = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+(\d{1,2}:\d{2}:\d{2})', line)
-            if match:
-                start_time = match.group(1)
-                end_time = match.group(2)
+            # Check for ongoing task (HH:MM:SS -)
+            match_ongoing = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+-', line)
+            if match_ongoing:
+                start_time = match_ongoing.group(1)
                 start_12h = convert_24h_to_12h(start_time)
-                end_12h = convert_24h_to_12h(end_time)
-                # Replace in line
-                line = line[:match.start()] + f"{start_12h} {end_12h}" + line[match.end():]
+                # Replace start time, keep the dash
+                line = line[:match_ongoing.start()] + f"{start_12h} -" + line[match_ongoing.end():]
+            else:
+                # Check for completed task (HH:MM:SS HH:MM:SS)
+                match = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+(\d{1,2}:\d{2}:\d{2})', line)
+                if match:
+                    start_time = match.group(1)
+                    end_time = match.group(2)
+                    start_12h = convert_24h_to_12h(start_time)
+                    end_12h = convert_24h_to_12h(end_time)
+                    # Replace in line
+                    line = line[:match.start()] + f"{start_12h} {end_12h}" + line[match.end():]
             result_lines.append(line)
             continue
 
         # Match primary rows: W## YYYY-MM-DD Day TAGS START END TIME [TOTAL]
-        # The tags column has variable spacing, so we need to find the start/end times
-        # Hours can be 1-2 digits (0-23)
-        match = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+(\d{1,2}:\d{2}:\d{2})', line)
+        # Check for ongoing task (HH:MM:SS -)
+        match_ongoing = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+-', line)
+        if match_ongoing:
+            start_time = match_ongoing.group(1)
+            start_12h = convert_24h_to_12h(start_time)
+            # Replace start time, keep the dash
+            converted_line = line[:match_ongoing.start()] + f"{start_12h} -" + line[match_ongoing.end():]
+            result_lines.append(converted_line)
+            continue
 
+        # Check for completed task (HH:MM:SS HH:MM:SS)
+        match = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+(\d{1,2}:\d{2}:\d{2})', line)
         if match:
             start_time = match.group(1)
             end_time = match.group(2)
@@ -319,8 +337,8 @@ def align_summary_columns(text: str) -> str:
 
         # Match primary rows (with week/date)
         if re.match(r'^W\d+', line):
-            # Match: Wk Date Tags Start(time) End(time) Time(duration) [Total(duration)]
-            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
+            # Match: Wk Date Tags Start(time) End(time or dash) Time(duration) [Total(duration)]
+            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(-|\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 max_widths['wk'] = max(max_widths['wk'], len(match.group(1)))
                 max_widths['date'] = max(max_widths['date'], len(match.group(2)))
@@ -332,8 +350,8 @@ def align_summary_columns(text: str) -> str:
                     max_widths['total'] = max(max_widths['total'], len(match.group(7)))
         else:
             # Match continuation rows (no week/date)
-            # Match: indent Tags Start(time) End(time) Time(duration) [Total(duration)]
-            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
+            # Match: indent Tags Start(time) End(time or dash) Time(duration) [Total(duration)]
+            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(-|\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 max_widths['tags'] = max(max_widths['tags'], len(match.group(2).rstrip()))
                 max_widths['start'] = max(max_widths['start'], len(match.group(3)))
@@ -352,7 +370,7 @@ def align_summary_columns(text: str) -> str:
 
         # Match and format primary rows
         if re.match(r'^W\d+', line):
-            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
+            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(-|\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 wk = match.group(1)
                 date = match.group(2)
@@ -377,7 +395,7 @@ def align_summary_columns(text: str) -> str:
                 result_lines.append(line)
         else:
             # Match and format continuation rows
-            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
+            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(-|\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 tags = match.group(2).rstrip()
                 start = match.group(3)
