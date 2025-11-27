@@ -9,6 +9,8 @@ import re
 from datetime import datetime
 from typing import List
 
+__version__ = "1.0.0"
+
 
 def convert_24h_to_12h(time_str: str) -> str:
     """Convert 24-hour format time to 12-hour format (only for times of day, not durations)."""
@@ -552,6 +554,9 @@ def main():
         if len(args) == 0:  # Only add to main help, not subcommand help
             output += "\n       clock begin <tags> \"<annotation>\"  (new: start timer with annotation)"
         print_result(output)
+
+    elif command == 'version':
+        print_result(f"clock {__version__}\n")
 
     elif command == 'day':
         output = run_timew_command(['day'] + args)
