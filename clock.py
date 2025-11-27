@@ -142,6 +142,28 @@ def convert_output_to_12h(output: str) -> str:
     return output
 
 
+def remove_day_column(text: str) -> str:
+    """Remove the Day column from summary output and merge with Date column."""
+    lines = text.split('\n')
+    result_lines = []
+
+    for line in lines:
+        # Remove the "Day" column from header and separator lines
+        if 'Date' in line and 'Day' in line:
+            # Remove " Day" from the header line
+            line = line.replace(' Day', '')
+        elif line.startswith('---') and ' --- ' in line:
+            # Remove the Day column separator ("--- ")
+            # Replace "--- --- ---" with "--- ---" etc
+            line = re.sub(r' --- +--- ', ' --- ', line)
+        # For data rows with dates, the day is already there
+        # Just clean up any duplicate spacing
+
+        result_lines.append(line)
+
+    return '\n'.join(result_lines)
+
+
 def format_dates_in_summary(text: str) -> str:
     """Format dates in summary output to mm/dd format."""
     # Match dates in format YYYY-MM-DD and convert to MM/DD
@@ -183,8 +205,10 @@ def main():
         output = convert_output_to_12h(output)
         # Remove seconds for cleaner summary display
         output = remove_seconds_from_times(output)
-        # Format dates as mm/dd/yy
+        # Format dates as mm/dd
         output = format_dates_in_summary(output)
+        # Remove Day column and merge with Date
+        output = remove_day_column(output)
         print_result(output)
 
     command = sys.argv[1]
@@ -216,8 +240,10 @@ def main():
         output = convert_output_to_12h(output)
         # Remove seconds for cleaner summary display
         output = remove_seconds_from_times(output)
-        # Format dates as mm/dd/yy
+        # Format dates as mm/dd
         output = format_dates_in_summary(output)
+        # Remove Day column and merge with Date
+        output = remove_day_column(output)
         print_result(output)
 
     elif command == 'begin':
