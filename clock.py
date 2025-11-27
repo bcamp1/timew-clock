@@ -426,10 +426,9 @@ def align_summary_columns(text: str, show_annotations: bool = False) -> str:
                     f"{tags:<{max_widths['tags']}} │ "
                     f"{start:>{max_widths['start']}} │ "
                     f"{end:>{max_widths['end']}} │ "
-                    f"{time:>{max_widths['time']}}"
+                    f"{time:>{max_widths['time']}} │ "
+                    f"{total:>{max_widths['total']}}"
                 )
-                if total:
-                    formatted += f" │ {total:>{max_widths['total']}}"
                 result_lines.append(formatted)
             else:
                 result_lines.append(line)
@@ -454,10 +453,9 @@ def align_summary_columns(text: str, show_annotations: bool = False) -> str:
                     f"{tags:<{max_widths['tags']}} │ "
                     f"{start:>{max_widths['start']}} │ "
                     f"{end:>{max_widths['end']}} │ "
-                    f"{time:>{max_widths['time']}}"
+                    f"{time:>{max_widths['time']}} │ "
+                    f"{total:>{max_widths['total']}}"
                 )
-                if total:
-                    formatted += f" │ {total:>{max_widths['total']}}"
                 result_lines.append(formatted)
             else:
                 result_lines.append(line)
