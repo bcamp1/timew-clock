@@ -323,8 +323,13 @@ def convert_total_to_duration(text: str) -> str:
     return '\n'.join(result_lines)
 
 
-def align_summary_columns(text: str) -> str:
-    """Right-align time columns so am/pm values line up."""
+def align_summary_columns(text: str, show_annotations: bool = False) -> str:
+    """Right-align time columns so am/pm values line up.
+
+    Args:
+        text: The summary output text to align
+        show_annotations: If True, label the Tags column as "Tags / Reason"
+    """
     lines = text.split('\n')
 
     # First pass: find max widths for all columns
@@ -371,10 +376,11 @@ def align_summary_columns(text: str) -> str:
         # Handle header line (contains "Tags")
         if 'Tags' in line:
             # Rebuild header with proper column widths
+            tags_label = 'Tags / Reason' if show_annotations else 'Tags'
             header = (
                 f"{'Wk':<{max_widths['wk']}}  "
                 f"{'Date':<{max_widths['date']}}  "
-                f"{'Tags':<{max_widths['tags']}}  "
+                f"{tags_label:<{max_widths['tags']}}  "
                 f"{'Start':>{max_widths['start']}}  "
                 f"{'End':>{max_widths['end']}}  "
                 f"{'Time':>{max_widths['time']}}"
@@ -567,8 +573,9 @@ def main():
         output = format_dates_in_summary(output)
         # Remove Day column and merge with Date
         output = remove_day_column(output)
-        # Align columns
-        output = align_summary_columns(output)
+        # Align columns (check if annotations are being shown)
+        show_ann = ':ann' in args
+        output = align_summary_columns(output, show_annotations=show_ann)
         print_result(output)
 
     elif command == 'begin':
