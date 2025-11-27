@@ -24,7 +24,7 @@ def convert_24h_to_12h(time_str: str) -> str:
                 # Don't convert durations which can exceed 23 hours
                 if 0 <= h < 24 and 0 <= m < 60 and 0 <= s < 60:
                     time_obj = datetime.strptime(time_str, '%H:%M:%S')
-                    return time_obj.strftime('%I:%M:%S %p')
+                    return time_obj.strftime('%I:%M:%S').lstrip('0') + time_obj.strftime('%p').lower()
         # Then try HH:MM format
         elif ':' in time_str:
             parts = time_str.split(':')
@@ -34,7 +34,7 @@ def convert_24h_to_12h(time_str: str) -> str:
                 # Only convert if this is a valid time of day (0-23 hours)
                 if 0 <= h < 24 and 0 <= m < 60:
                     time_obj = datetime.strptime(time_str, '%H:%M')
-                    return time_obj.strftime('%I:%M %p')
+                    return time_obj.strftime('%I:%M').lstrip('0') + time_obj.strftime('%p').lower()
     except (ValueError, AttributeError):
         pass
     return time_str
@@ -143,10 +143,10 @@ def convert_output_to_12h(output: str) -> str:
 
 
 def remove_seconds_from_times(text: str) -> str:
-    """Remove seconds from time displays (HH:MM:SS am/pm -> HH:MM am/pm)."""
-    # Match times in format HH:MM:SS AM/PM and replace with HH:MM AM/PM
-    text = re.sub(r'\b(\d{1,2}):(\d{2}):\d{2}\s+([APap][Mm])\b',
-                  r'\1:\2 \3',
+    """Remove seconds from time displays (HH:MM:SSam/pm -> HH:MMam/pm)."""
+    # Match times in format HH:MM:SSam/pm and replace with HH:MMam/pm
+    text = re.sub(r'\b(\d{1,2}):(\d{2}):\d{2}([ap]m)\b',
+                  r'\1:\2\3',
                   text)
     return text
 
