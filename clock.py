@@ -506,6 +506,13 @@ def label_grand_total(text: str) -> str:
     lines = text.split('\n')
     result_lines = []
 
+    # Find the table width by looking for the separator line
+    table_width = 0
+    for line in lines:
+        if re.match(r'^─+┼', line):  # Separator line starts with dashes and intersection
+            table_width = len(line)
+            break
+
     for i, line in enumerate(lines):
         # Look for the grand total line: mostly whitespace followed by a duration
         # Pattern: whitespace, then h/m duration at the end of the line
@@ -513,8 +520,9 @@ def label_grand_total(text: str) -> str:
             # This is likely the grand total line
             # Get the duration value
             duration = line.strip()
-            # Replace with labeled version, right-aligned to match the table
-            result_lines.append(f"{'Grand Total: ' + duration:>80}")
+            # Replace with labeled version, right-aligned to the table width
+            label = f"Grand Total: {duration}"
+            result_lines.append(f"{label:>{table_width}}")
         else:
             result_lines.append(line)
 
