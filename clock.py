@@ -576,6 +576,9 @@ def main():
         period = command
         command = 'summary'
         args = [period] + args
+    # Default delete to @1 (most recent entry)
+    elif command == 'delete' and len(args) == 0:
+        args = ['@1']
 
     if command == 'help':
         # Show help with clock instead of timew
