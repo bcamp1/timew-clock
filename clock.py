@@ -571,6 +571,10 @@ def main():
     # Support shorthand aliases
     if command == 's':
         command = 'summary'
+    # Support :period shortcuts for summary (e.g., :month, :week, :day, :year)
+    elif command in [':day', ':week', ':month', ':year']:
+        command = 'summary'
+        args = [command] + args
 
     if command == 'help':
         # Show help with clock instead of timew
