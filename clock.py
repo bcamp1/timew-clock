@@ -625,33 +625,24 @@ def main():
         print_result(output)
 
     elif command == 'begin':
-        # Parse: clock begin <tags...> "<annotation>"
-        # The annotation should be quoted (with double quotes)
+        # Parse: clock begin <tags...> [-a "annotation"]
         if len(args) == 0:
-            print_result("Error: begin requires at least tags. Usage: clock begin <tags> \"<annotation>\"\n")
+            print_result("Error: begin requires at least tags. Usage: clock begin <tags> [-a \"annotation\"]\n")
 
-        # Find the last double-quoted argument
         tags = []
         annotation = ""
 
-        for i, arg in enumerate(args):
-            if arg.startswith('"') and arg.endswith('"'):
-                # Found a fully quoted annotation
-                annotation = arg[1:-1]  # Remove quotes
-                break
-            elif arg.startswith('"'):
-                # Found start of quoted annotation - collect all args until closing quote
-                annotation_parts = []
-                for j in range(i, len(args)):
-                    part = args[j]
-                    annotation_parts.append(part.rstrip('"'))
-                    if part.endswith('"'):
-                        break
-                annotation = ' '.join(annotation_parts)
-                annotation = annotation[1:-1] if annotation.startswith('"') else annotation
-                break
+        # Parse arguments for -a flag
+        i = 0
+        while i < len(args):
+            if args[i] == '-a' and i + 1 < len(args):
+                # Found -a flag with annotation
+                annotation = args[i + 1]
+                i += 2
             else:
-                tags.append(arg)
+                # Regular tag
+                tags.append(args[i])
+                i += 1
 
         # Start the timer
         result = run_timew_command(['start'] + tags)
