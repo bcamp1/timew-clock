@@ -501,6 +501,26 @@ def remove_seconds_from_times(text: str) -> str:
     return text
 
 
+def label_grand_total(text: str) -> str:
+    """Add 'Grand Total:' label to the final summary total line."""
+    lines = text.split('\n')
+    result_lines = []
+
+    for i, line in enumerate(lines):
+        # Look for the grand total line: mostly whitespace followed by a duration
+        # Pattern: whitespace, then h/m duration at the end of the line
+        if re.match(r'^\s+[\dh]+m?\s*$', line):
+            # This is likely the grand total line
+            # Get the duration value
+            duration = line.strip()
+            # Replace with labeled version, right-aligned to match the table
+            result_lines.append(f"{'Grand Total: ' + duration:>80}")
+        else:
+            result_lines.append(line)
+
+    return '\n'.join(result_lines)
+
+
 def replace_timew_with_clock(text: str) -> str:
     """Replace 'timew' command references with 'clock' in help text."""
     # Replace "timew <command>" with "clock <command>" at the start of lines
@@ -533,6 +553,8 @@ def main():
         output = remove_day_column(output)
         # Align columns
         output = align_summary_columns(output)
+        # Label the grand total
+        output = label_grand_total(output)
         print_result(output)
 
     command = sys.argv[1]
@@ -581,6 +603,8 @@ def main():
         # Align columns (check if annotations are being shown)
         show_ann = ':ann' in args
         output = align_summary_columns(output, show_annotations=show_ann)
+        # Label the grand total
+        output = label_grand_total(output)
         print_result(output)
 
     elif command == 'begin':
