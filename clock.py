@@ -573,8 +573,9 @@ def main():
         command = 'summary'
     # Support :period shortcuts for summary (e.g., :month, :week, :day, :year)
     elif command in [':day', ':week', ':month', ':year']:
+        period = command
         command = 'summary'
-        args = [command] + args
+        args = [period] + args
 
     if command == 'help':
         # Show help with clock instead of timew
