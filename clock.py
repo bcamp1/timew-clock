@@ -143,10 +143,10 @@ def convert_output_to_12h(output: str) -> str:
 
 
 def format_dates_in_summary(text: str) -> str:
-    """Format dates in summary output to mm/dd/yy format."""
-    # Match dates in format YYYY-MM-DD and convert to MM/DD/YY
+    """Format dates in summary output to mm/dd format."""
+    # Match dates in format YYYY-MM-DD and convert to MM/DD
     text = re.sub(r'\b(\d{4})-(\d{2})-(\d{2})\b',
-                  lambda m: f"{m.group(2)}/{m.group(3)}/{m.group(1)[2:]}",
+                  lambda m: f"{m.group(2)}/{m.group(3)}",
                   text)
     return text
 
