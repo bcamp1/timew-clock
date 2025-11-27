@@ -142,6 +142,169 @@ def convert_output_to_12h(output: str) -> str:
     return output
 
 
+def convert_summary_to_12h(output: str) -> str:
+    """Convert Start and End times in summary output to 12-hour format.
+
+    Only converts the Start and End columns, preserving Time and Total columns as-is
+    since they are durations, not times of day.
+    """
+    lines = output.split('\n')
+    result_lines = []
+
+    for line in lines:
+        # Skip empty lines and header/separator lines
+        if not line.strip() or line.startswith('---') or 'Tags' in line:
+            result_lines.append(line)
+            continue
+
+        # For continuation rows (indented, without week), look for start/end times
+        if not re.match(r'^W\d+', line) and line.strip():
+            # Continuation rows might still have start/end times
+            # Pattern: spaces... tags... H:MM:SS or HH:MM:SS followed by same
+            # Try to match and convert them
+            match = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+(\d{1,2}:\d{2}:\d{2})', line)
+            if match:
+                start_time = match.group(1)
+                end_time = match.group(2)
+                start_12h = convert_24h_to_12h(start_time)
+                end_12h = convert_24h_to_12h(end_time)
+                # Replace in line
+                line = line[:match.start()] + f"{start_12h} {end_12h}" + line[match.end():]
+            result_lines.append(line)
+            continue
+
+        # Match primary rows: W## YYYY-MM-DD Day TAGS START END TIME [TOTAL]
+        # The tags column has variable spacing, so we need to find the start/end times
+        # Hours can be 1-2 digits (0-23)
+        match = re.search(r'(\d{1,2}:\d{2}:\d{2})\s+(\d{1,2}:\d{2}:\d{2})', line)
+
+        if match:
+            start_time = match.group(1)
+            end_time = match.group(2)
+
+            # Convert start and end times to 12-hour format
+            start_12h = convert_24h_to_12h(start_time)
+            end_12h = convert_24h_to_12h(end_time)
+
+            # Replace in line
+            converted_line = line[:match.start()] + f"{start_12h} {end_12h}" + line[match.end():]
+            result_lines.append(converted_line)
+        else:
+            result_lines.append(line)
+
+    return '\n'.join(result_lines)
+
+
+def format_duration(duration_str: str) -> str:
+    """Convert duration from HH:MM:SS format to human-readable format (e.g., 1h32m or 45m)."""
+    try:
+        parts = duration_str.split(':')
+        if len(parts) == 3:
+            hours = int(parts[0])
+            minutes = int(parts[1])
+            # Ignore seconds
+            if hours == 0:
+                return f"{minutes}m" if minutes > 0 else "0m"
+            elif minutes == 0:
+                return f"{hours}h"
+            else:
+                return f"{hours}h{minutes}m"
+    except (ValueError, IndexError):
+        pass
+    return duration_str
+
+
+def format_summary_durations(text: str) -> str:
+    """Convert duration columns (Time and Total) to human-readable format.
+
+    Converts HH:MM:SS to Xh, Ym, or XhYm format.
+    """
+    lines = text.split('\n')
+    result_lines = []
+
+    for line in lines:
+        # Skip empty lines and header/separator lines
+        if not line.strip() or line.startswith('---') or 'Tags' in line:
+            result_lines.append(line)
+            continue
+
+        # For continuation rows (indented, without week), process any durations
+        if not re.match(r'^W\d+', line) and line.strip():
+            # Continuation rows might have start/end times converted already (from convert_summary_to_12h)
+            # Find all HH:MM:SS or Xh/Yam patterns and convert remaining durations
+            # We need to be careful not to convert times with am/pm (those are start/end times)
+
+            # Convert all remaining H:MM:SS or HH:MM:SS patterns that don't have am/pm
+            def replace_duration(match):
+                full_match = match.group(0)
+                # Check if this time is followed by am/pm (it's a converted time, not a duration)
+                if re.search(r'[ap]m\s', line[match.end():match.end()+3]):
+                    return full_match
+                duration_str = full_match
+                return format_duration(duration_str)
+
+            line = re.sub(r'\d{1,2}:\d{2}:\d{2}', replace_duration, line)
+            result_lines.append(line)
+            continue
+
+        # For primary rows, find and convert all durations
+        # After conversion by convert_summary_to_12h(), times look like "10:23:04pm"
+        # Durations still look like "1:00:54"
+        # We need to convert the durations but not touch the times
+
+        # Convert all HH:MM:SS that are NOT followed by am/pm
+        def replace_duration(match):
+            full_match = match.group(0)
+            # Check if followed by am/pm (it's a time, not duration)
+            pos = match.end()
+            if pos < len(line) and line[pos:pos+1] in ['a', 'p']:
+                # This is likely "HH:MM:SS" followed by am/pm
+                return full_match
+            return format_duration(full_match)
+
+        line = re.sub(r'\d{1,2}:\d{2}:\d{2}', replace_duration, line)
+        result_lines.append(line)
+
+    return '\n'.join(result_lines)
+
+
+def convert_total_to_duration(text: str) -> str:
+    """Convert Total column from time format to duration format (e.g., 6:53am -> 6h53m).
+
+    This function handles the case where Total is in 12-hour format (from incorrect
+    conversion of durations) and converts to human-readable format.
+    """
+    lines = text.split('\n')
+    result_lines = []
+
+    for line in lines:
+        # Skip header and separator lines
+        if not line.strip() or line.startswith('---') or 'Tags' in line:
+            result_lines.append(line)
+            continue
+
+        # Match times in the Total column (last column with am/pm)
+        # Replace the last occurrence of HH:MM[ap]m with duration format
+        # Use a negative lookbehind to ensure we're at the end or followed by spaces/end
+        match = re.search(r'(\d{1,2}):(\d{2})([ap]m)(?=\s*$)', line)
+        if match:
+            hours = int(match.group(1))
+            minutes = int(match.group(2))
+
+            # Convert to duration format
+            if minutes == 0:
+                duration = f"{hours}h"
+            else:
+                duration = f"{hours}h{minutes:02d}m"
+
+            # Replace in the line
+            line = line[:match.start()] + duration + line[match.end():]
+
+        result_lines.append(line)
+
+    return '\n'.join(result_lines)
+
+
 def align_summary_columns(text: str) -> str:
     """Right-align time columns so am/pm values line up."""
     lines = text.split('\n')
@@ -298,14 +461,17 @@ def main():
     if len(sys.argv) < 2:
         # No command, show summary instead of help (more useful than timew's default)
         output = run_timew_command(['summary'])
-        output = convert_output_to_12h(output)
-        # Remove seconds for cleaner summary display
+        # Convert Start and End times to 12-hour format (not Time/Total which are durations)
+        output = convert_summary_to_12h(output)
+        # Remove seconds from time display
         output = remove_seconds_from_times(output)
+        # Format duration columns to human-readable format
+        output = format_summary_durations(output)
         # Format dates as mm/dd
         output = format_dates_in_summary(output)
         # Remove Day column and merge with Date
         output = remove_day_column(output)
-        # Align columns using tabs
+        # Align columns
         output = align_summary_columns(output)
         print_result(output)
 
@@ -335,14 +501,17 @@ def main():
 
     elif command == 'summary':
         output = run_timew_command(['summary'] + args)
-        output = convert_output_to_12h(output)
-        # Remove seconds for cleaner summary display
+        # Convert Start and End times to 12-hour format (not Time/Total which are durations)
+        output = convert_summary_to_12h(output)
+        # Remove seconds from time display
         output = remove_seconds_from_times(output)
+        # Format duration columns to human-readable format
+        output = format_summary_durations(output)
         # Format dates as mm/dd
         output = format_dates_in_summary(output)
         # Remove Day column and merge with Date
         output = remove_day_column(output)
-        # Align columns using tabs
+        # Align columns
         output = align_summary_columns(output)
         print_result(output)
 
