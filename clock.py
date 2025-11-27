@@ -142,6 +142,15 @@ def convert_output_to_12h(output: str) -> str:
     return output
 
 
+def format_dates_in_summary(text: str) -> str:
+    """Format dates in summary output to mm/dd/yy format."""
+    # Match dates in format YYYY-MM-DD and convert to MM/DD/YY
+    text = re.sub(r'\b(\d{4})-(\d{2})-(\d{2})\b',
+                  lambda m: f"{m.group(2)}/{m.group(3)}/{m.group(1)[2:]}",
+                  text)
+    return text
+
+
 def remove_seconds_from_times(text: str) -> str:
     """Remove seconds from time displays (HH:MM:SSam/pm -> HH:MMam/pm)."""
     # Match times in format HH:MM:SSam/pm and replace with HH:MMam/pm
@@ -174,6 +183,8 @@ def main():
         output = convert_output_to_12h(output)
         # Remove seconds for cleaner summary display
         output = remove_seconds_from_times(output)
+        # Format dates as mm/dd/yy
+        output = format_dates_in_summary(output)
         print_result(output)
 
     command = sys.argv[1]
@@ -205,6 +216,8 @@ def main():
         output = convert_output_to_12h(output)
         # Remove seconds for cleaner summary display
         output = remove_seconds_from_times(output)
+        # Format dates as mm/dd/yy
+        output = format_dates_in_summary(output)
         print_result(output)
 
     elif command == 'begin':
