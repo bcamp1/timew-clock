@@ -623,7 +623,7 @@ def main():
         # Parse: clock begin <tags...> "<annotation>"
         # The annotation should be quoted (with double quotes)
         if len(args) == 0:
-            print_result("Error: begin requires at least tags. Usage: clock begin <tags> \"<annotation>\"")
+            print_result("Error: begin requires at least tags. Usage: clock begin <tags> \"<annotation>\"\n")
 
         # Find the last double-quoted argument
         tags = []
