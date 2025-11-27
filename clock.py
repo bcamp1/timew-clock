@@ -319,7 +319,8 @@ def align_summary_columns(text: str) -> str:
 
         # Match primary rows (with week/date)
         if re.match(r'^W\d+', line):
-            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            # Match: Wk Date Tags Start(time) End(time) Time(duration) [Total(duration)]
+            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 max_widths['wk'] = max(max_widths['wk'], len(match.group(1)))
                 max_widths['date'] = max(max_widths['date'], len(match.group(2)))
@@ -331,7 +332,8 @@ def align_summary_columns(text: str) -> str:
                     max_widths['total'] = max(max_widths['total'], len(match.group(7)))
         else:
             # Match continuation rows (no week/date)
-            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            # Match: indent Tags Start(time) End(time) Time(duration) [Total(duration)]
+            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 max_widths['tags'] = max(max_widths['tags'], len(match.group(2).rstrip()))
                 max_widths['start'] = max(max_widths['start'], len(match.group(3)))
@@ -350,7 +352,7 @@ def align_summary_columns(text: str) -> str:
 
         # Match and format primary rows
         if re.match(r'^W\d+', line):
-            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            match = re.match(r'^(W\d+)\s+(\d{2}/\d{2}\s+\w{3})\s+(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 wk = match.group(1)
                 date = match.group(2)
@@ -375,7 +377,7 @@ def align_summary_columns(text: str) -> str:
                 result_lines.append(line)
         else:
             # Match and format continuation rows
-            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)(?:\s+(\d{1,2}:\d{2}[ap]m))?', line)
+            match = re.match(r'^(\s+)(.+?)(\d{1,2}:\d{2}[ap]m)\s+(\d{1,2}:\d{2}[ap]m)\s+([\dh]+m?|\d+m)(?:\s+([\dh]+m?|\d+m))?', line)
             if match:
                 tags = match.group(2).rstrip()
                 start = match.group(3)
