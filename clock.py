@@ -498,6 +498,10 @@ def main():
     command = sys.argv[1]
     args = sys.argv[2:]
 
+    # Support shorthand aliases
+    if command == 's':
+        command = 'summary'
+
     if command == 'help':
         # Show help with clock instead of timew
         output = run_timew_command(['help'] + args)
