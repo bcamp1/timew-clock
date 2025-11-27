@@ -377,15 +377,15 @@ def align_summary_columns(text: str, show_annotations: bool = False) -> str:
 
         # Handle header line (contains "Tags")
         if 'Tags' in line:
-            # Rebuild header with proper column widths and vertical borders
+            # Rebuild header with proper column widths (no vertical dividers, just spacing)
             tags_label = 'Tags / Reason' if show_annotations else 'Tags'
             header = (
-                f"{'Wk':<{max_widths['wk']}} │ "
-                f"{'Date':<{max_widths['date']}} │ "
-                f"{tags_label:<{max_widths['tags']}} │ "
-                f"{'Start':>{max_widths['start']}} │ "
-                f"{'End':>{max_widths['end']}} │ "
-                f"{'Time':>{max_widths['time']}} │ "
+                f"{'Wk':<{max_widths['wk'] + 3}} "
+                f"{'Date':<{max_widths['date'] + 3}} "
+                f"{tags_label:<{max_widths['tags'] + 3}} "
+                f"{'Start':>{max_widths['start'] + 3}} "
+                f"{'End':>{max_widths['end'] + 3}} "
+                f"{'Time':>{max_widths['time'] + 3}} "
                 f"{'Total':>{max_widths['total']}}"
             )
             result_lines.append(header)
