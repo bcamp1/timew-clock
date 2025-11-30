@@ -628,10 +628,7 @@ def main():
         print_result(output)
 
     elif command == 'begin':
-        # Parse: clock begin <tags...> [-a "annotation"]
-        if len(args) == 0:
-            print_result("Error: begin requires at least tags. Usage: clock begin <tags> [-a \"annotation\"]\n")
-
+        # Parse: clock begin [<tags...>] [-a "annotation"]
         tags = []
         annotation = ""
 
@@ -661,7 +658,7 @@ def main():
     else:
         # Pass through to timew
         output = run_timew_command([command] + args)
-        print_result(convert_output_to_12h(output))
+        print_result(output)
 
 
 if __name__ == '__main__':
